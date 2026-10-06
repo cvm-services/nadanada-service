@@ -29,7 +29,7 @@ Repo: https://github.com/cvm-services/nadanada-service (private)
 - [x] `docs/cvm/llms.txt`, `docs/cvm/llms-full.txt`, `README.md`
 
 ## 4. Tests
-- [x] 22 `pytest` tests green; coverage 79% (gate 70%)
+- [x] 34 `pytest` tests green; coverage 80% (gate 70%)
 - [x] 4 Deno announcement tests green
 - [x] CVM JSON-RPC surface test (initialize/tools/resources/notification)
 
