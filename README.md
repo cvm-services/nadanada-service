@@ -11,13 +11,18 @@ payload addressed to the caller.
 
 See `PLAN.md` for the design and `CHECKLIST.md` for status.
 
-## Why a browser
+## Reader backends
 
-nadanada separates *website* numbers from *API* numbers: a website number is not
-readable via the REST API, and its private dashboard is behind a Cloudflare
-challenge. So the reader drives a persistent Chromium (Playwright) against the
-dashboard and labels every result `source: "dashboard-scrape"`. The $7/1mo API
-number remains the robust fallback.
+nadanada separates *website* numbers from *API* numbers. Two backends:
+
+- `NADANADA_READER=playwright` (default) — reads the private dashboard URL with a
+  persistent Chromium. The dashboard is behind a Cloudflare **managed** challenge
+  which does not clear for an automated browser from this host (see
+  `evidence/CF-FINDING.md`), so this path is currently blocked.
+- `NADANADA_READER=api` — reads an **API-purchased** number via the nadanada REST
+  API (`userId` + `userSecret`, query params). No browser, no challenge. This is
+  the robust path; a website number is not API-visible, so an API number
+  ($7/1mo, $12/3mo) is required.
 
 ## Quickstart
 
@@ -27,7 +32,13 @@ pip install -r requirements.txt
 # reader (needs a browser):
 python -m playwright install chromium
 
-export NADANADA_DASHBOARD_URL='https://nadanada.me/phone-numbers/user/<token>'
+# reader backend: 'api' (recommended) or 'playwright'
+export NADANADA_READER=api
+export NADANADA_API_USER_ID='<api userId>'
+export NADANADA_API_USER_SECRET='<api userSecret>'
+# if instead using the browser backend:
+# export NADANADA_READER=playwright
+# export NADANADA_DASHBOARD_URL='https://nadanada.me/phone-numbers/user/<token>'
 export CVM_OWNER_PUBKEYS='<operator hex pubkey>'
 export NADANADA_MINT_URL='https://testnut.cashu.space'
 
@@ -51,7 +62,7 @@ app/                 service core (pure, testable)
   cvm_rpc.py         MCP JSON-RPC dispatch
   nip44.py           NIP-44 v2 (vectors-proved)
   cashu.py           Cashu decode/verify/swap + MintClient
-  nadanada_dashboard.py  Playwright reader + pure parser
+  nadanada_dashboard.py  reader backends (Playwright + REST) + pure parser
   nadanada_tools.py  MCP tools + CEP-8 gating
   main.py / server.py
 scripts/             run_cvm_server.py, discover_dashboard.py, nadanada_probe.py

@@ -43,7 +43,7 @@ from app.cvm import (                                               # noqa: E402
 )
 from app.cvm_rpc import handle_rpc                                  # noqa: E402
 from app.main import load_docs                                      # noqa: E402
-from app.nadanada_dashboard import DashboardReader                  # noqa: E402
+from app.nadanada_dashboard import reader_for                       # noqa: E402
 from app.nadanada_tools import CvmTools                             # noqa: E402
 
 
@@ -90,7 +90,7 @@ async def main() -> int:
     owners = {p.strip().lower() for p in
               os.environ.get("CVM_OWNER_PUBKEYS", "").split(",") if p.strip()}
 
-    reader = DashboardReader(cfg)
+    reader = reader_for(cfg)
     mint = MintClient(cfg.mint_url) if cfg.mint_url else None
     contract = ContractContext(npub=npub, relays=tuple(args.relays),
                                contract_url=cfg.contract_url)

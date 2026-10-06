@@ -34,9 +34,9 @@ def create_app(config: Config | None = None, *, tools=None) -> FastAPI:
     docs = load_docs()
 
     if tools is None:
-        from .nadanada_dashboard import DashboardReader
+        from .nadanada_dashboard import reader_for
         from .nadanada_tools import CvmTools
-        tools = CvmTools(DashboardReader(cfg), docs=docs,
+        tools = CvmTools(reader_for(cfg), docs=docs,
                          mint=None, price_sats=cfg.price_sats,
                          max_messages=cfg.max_messages)
     app.state.config = cfg

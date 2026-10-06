@@ -242,6 +242,62 @@ def launch_options(config) -> dict:
     return opts
 
 
+def _all_e164(obj, out: list[str] | None = None) -> list[str]:
+    """Collect every E.164-looking string anywhere in a decoded JSON value."""
+    out = [] if out is None else out
+    if isinstance(obj, str):
+        m = _E164.search(obj)
+        if m:
+            out.append(m.group(0))
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            _all_e164(v, out)
+    elif isinstance(obj, list):
+        for v in obj:
+            _all_e164(v, out)
+    return out
+
+
+class ApiFetcher:
+    """Read an API-purchased number via the nadanada REST API (no browser).
+
+    The GET auth is `userId` + `userSecret` as query params (verified against
+    nadanada's OpenAPI). Secrets stay in the params object and are never logged.
+    """
+
+    def __init__(self, config, client=None):
+        self.config = config
+        self._client = client
+
+    def fetch(self) -> dict:
+        import httpx
+        client = self._client or httpx.Client(timeout=20.0)
+        base = self.config.api_base.rstrip("/")
+        uid, secret = self.config.api_user_id, self.config.api_user_secret
+        if not uid or not secret:
+            raise RuntimeError(
+                "NADANADA_API_USER_ID / NADANADA_API_USER_SECRET are not set")
+        params = {"userId": uid, "userSecret": secret}
+        r = client.get(f"{base}/api/v2/phone/numbers", params=params)
+        if r.status_code == 401:
+            raise RuntimeError("nadanada API auth failed (check userId/userSecret)")
+        r.raise_for_status()
+        bodies = [{"url": f"{base}/api/v2/phone/numbers", "body": r.text}]
+        for n in dict.fromkeys(_all_e164(r.json())):
+            mr = client.get(f"{base}/api/v2/phone/messages/{n}", params=params)
+            if mr.status_code == 200:
+                bodies.append({"url": f"{base}/api/v2/phone/messages/{n}",
+                               "body": mr.text})
+        return {"json": bodies, "text": "", "html": ""}
+
+
+def reader_for(config, fetcher=None) -> "DashboardReader":
+    """Build a DashboardReader with the backend named by ``config.reader``."""
+    if fetcher is None:
+        fetcher = ApiFetcher(config) if config.reader == "api" else PlaywrightFetcher(config)
+    return DashboardReader(config, fetcher=fetcher)
+
+
 class DashboardReader:
     """Read the dashboard through an injected fetcher (Playwright in prod)."""
 

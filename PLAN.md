@@ -27,8 +27,11 @@ inbound-SMS reader; it does not create accounts anywhere.
   reader must drive a real browser.
 
 Decision: **Playwright** (persistent Chromium context) against the private
-dashboard URL. The API-number route ($7/1mo, $12/3mo) remains the robust
-fallback if the dashboard path proves too brittle.
+dashboard URL, with a **REST backend** (`NADANADA_READER=api`) implemented as the
+robust fallback. Finding (2026-10-06): the dashboard's Cloudflare managed
+challenge does not clear for an automated browser from this host
+(`evidence/CF-FINDING.md`), so the REST backend is the working path once an API
+number ($7/1mo, $12/3mo) exists.
 
 ## 3. Identity
 

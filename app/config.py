@@ -1,8 +1,13 @@
 """Runtime configuration for the nadanada-service CVM.
 
-Env-driven; no secrets in code. The dashboard URL is a bearer secret (whoever
-holds it can read the number's messages), so it is read from the environment
-(OpenBao-injected in production) and never logged.
+Env-driven; no secrets in code. Two reader backends:
+
+* ``reader="playwright"`` reads the private dashboard URL (a bearer secret).
+* ``reader="api"`` reads a nadanada **API** number via the REST API using
+  ``userId`` + ``userSecret`` (a website number is not API-visible).
+
+All secrets are read from the environment (OpenBao-injected in production) and
+never logged.
 """
 from __future__ import annotations
 
@@ -53,9 +58,16 @@ class Config:
     version: str = "0.1.0"
     commit: str | None = None
 
-    #: full private dashboard URL, e.g.
-    #: https://nadanada.me/phone-numbers/user/<token>  (SECRET).
+    #: "playwright" (dashboard scrape) or "api" (REST, API number).
+    reader: str = "playwright"
+
+    #: playwright backend: full private dashboard URL (SECRET).
     dashboard_url: str = ""
+    #: api backend: nadanada API account credentials (SECRET).
+    api_base: str = "https://nadanada.me"
+    api_user_id: str = ""
+    api_user_secret: str = ""
+
     #: where the CVM contract is served, advertised in the CEP-6 catalog.
     contract_url: str = "https://nadanada.orangesync.tech/cvm/llms.txt"
 
@@ -85,7 +97,11 @@ class Config:
             service=e.get("NADANADA_SERVICE", "nadanada"),
             version=e.get("NADANADA_VERSION", "0.1.0"),
             commit=e.get("NADANADA_COMMIT") or _git_sha(),
+            reader=(e.get("NADANADA_READER", "playwright") or "playwright").strip().lower(),
             dashboard_url=(e.get("NADANADA_DASHBOARD_URL") or "").strip(),
+            api_base=(e.get("NADANADA_API_BASE", "https://nadanada.me") or "").strip(),
+            api_user_id=(e.get("NADANADA_API_USER_ID") or "").strip(),
+            api_user_secret=(e.get("NADANADA_API_USER_SECRET") or "").strip(),
             contract_url=e.get("NADANADA_CVM_CONTRACT_URL",
                                "https://nadanada.orangesync.tech/cvm/llms.txt"),
             mint_url=e.get("NADANADA_MINT_URL", "https://testnut.cashu.space"),

@@ -14,7 +14,7 @@ Repo: https://github.com/cvm-services/nadanada-service (private)
 ## 1. Core
 - [x] `app/config.py` — env-driven config
 - [x] `app/cvm.py` — protocol constants + kit-fixture announcement loader
-- [x] `app/nadanada_dashboard.py` — Playwright reader + pure parser (+ CF-aware wait)
+- [x] `app/nadanada_dashboard.py` — Playwright + REST reader backends, pure parser, CF-aware wait
 - [x] `app/nadanada_tools.py` — `phone.numbers.list` (free), `phone.messages.list` (paid)
 - [x] `app/main.py` + `server.py` — health + contract surface
 - [x] `scripts/discover_dashboard.py`, `scripts/nadanada_probe.py`
@@ -41,8 +41,8 @@ Repo: https://github.com/cvm-services/nadanada-service (private)
 - [x] Ran `scripts/discover_dashboard.py` (3 variants, incl. headed+stealth)
 - [!] **BLOCKED by Cloudflare**: the managed challenge does not clear for an
       automated browser from this host. See `evidence/CF-FINDING.md`.
-- [ ] Fallback: buy an API number ($7/1mo, $12/3mo) and swap the reader's
-      `Fetcher` from Playwright to the REST client (tool surface unchanged)
+- [x] REST backend implemented (`ApiFetcher`, `NADANADA_READER=api`) + offline tests
+- [ ] Buy an API number and set `NADANADA_API_USER_ID`/`SECRET` for a live read
 
 ## 7. Deploy (vps2)
 - [x] `deploy/nadanada-http.service`, `nadanada-cvm.service`, `Caddyfile.nadanada`, `deploy/README.md`
