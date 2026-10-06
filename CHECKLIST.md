@@ -31,6 +31,7 @@ Repo: https://github.com/cvm-services/nadanada-service (private)
 ## 4. Tests
 - [x] 22 `pytest` tests green; coverage 79% (gate 70%)
 - [x] 4 Deno announcement tests green
+- [x] CVM JSON-RPC surface test (initialize/tools/resources/notification)
 
 ## 5. Registry + publish
 - [x] Create `cvm-services/nadanada-service` on GitHub (private) + push
