@@ -1,0 +1,6 @@
+# Caddy vhost for nadanada-service (append to the Caddyfile fronting
+# *.orangesync.tech on vps2). Caddy already terminates TLS; this proxies the app.
+nadanada.orangesync.tech {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8089
+}

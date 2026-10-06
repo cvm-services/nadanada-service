@@ -1,0 +1,53 @@
+# nadanada-service — manual
+
+This is the long form of docs/cvm/llms.txt. Read llms.txt first.
+
+## 1. What this is
+
+A ContextVM wrapping the operator's rented nadanada number so an agent can read
+inbound SMS. It exposes exactly two tools and one contract.
+
+Why a browser: nadanada separates website numbers from API numbers. A number
+bought on the website is not readable via the REST API, and its private
+dashboard sits behind a Cloudflare challenge, so the service reads the rendered
+dashboard with a persistent browser. The `source` field says so honestly.
+
+## 2. Identity and payment
+
+- Caller identity = your nostr pubkey (the gift-wrap sender).
+- Owner npub (operator) reads free; it is configured server-side.
+- Everyone else pays: CEP-8 `explicit_gating`, PMI `bitcoin-cashu`.
+- The advertised cap equals the price the server charges. The server swaps your
+  token at the mint (NUT-03) before reading — value held, not assumed.
+
+## 3. Privacy
+
+- Message bodies are returned only as a NIP-44 v2 ciphertext addressed to the
+  caller's npub. The service never sends a body in plaintext to the caller.
+- The phone account secret (the dashboard URL/token) stays server-side and is in
+  no tool result and no announcement.
+- The HTTP surface serves only the health check and this contract; there is no
+  HTTP messages endpoint.
+
+## 4. Running it
+
+    export NADANADA_DASHBOARD_URL='https://nadanada.me/phone-numbers/user/<token>'
+    export CVM_OWNER_PUBKEYS='<operator hex pubkey>'
+    export NADANADA_MINT_URL='https://testnut.cashu.space'
+    python3 scripts/run_cvm_server.py --announce     # publish the catalog
+    python3 scripts/run_cvm_server.py                # announce + serve
+
+Discovery/evidence (needs a browser):
+
+    python3 scripts/discover_dashboard.py            # shape + screenshot
+    python3 scripts/nadanada_probe.py                # live read evidence
+
+## 5. Tests
+
+    pytest                # offline; no browser, no network
+    deno task announce:check   # announcement fixture parity with the kit
+
+## 6. Out of scope
+
+Account provisioning/teardown for any third party. This is a generic inbound-SMS
+reader; it does not create accounts anywhere.

@@ -1,0 +1,25 @@
+[Unit]
+Description=nadanada-service ContextVM listener (MCP over Nostr, kind 25910)
+Documentation=https://nadanada.orangesync.tech/cvm/llms.txt
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nadanada
+Group=nadanada
+WorkingDirectory=/opt/nadanada-service
+EnvironmentFile=/etc/nadanada.env
+# Needs a browser for the dashboard read; xvfb-run keeps headless Chromium
+# robust on a box without a display when headless=false is required.
+ExecStart=/opt/nadanada-service/.venv/bin/python scripts/run_cvm_server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nadanada-service
+
+[Install]
+WantedBy=multi-user.target

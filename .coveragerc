@@ -1,0 +1,9 @@
+[run]
+# Modules vendored/reused verbatim from nosms with their own upstream tests, and
+# the live wire layer (proven by the live evidence run, not unit tests).
+omit =
+    app/cashu.py
+    app/cvm_rpc.py
+    app/errors.py
+    app/nip44.py
+    scripts/*

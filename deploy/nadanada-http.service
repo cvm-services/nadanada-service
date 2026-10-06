@@ -1,0 +1,26 @@
+[Unit]
+Description=nadanada-service HTTP surface (health + contract)
+Documentation=https://nadanada.orangesync.tech/cvm/llms.txt
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nadanada
+Group=nadanada
+WorkingDirectory=/opt/nadanada-service
+EnvironmentFile=/etc/nadanada.env
+# Secrets (NADANADA_DASHBOARD_URL, mint) live in /etc/nadanada.env (0600,
+# OpenBao-rendered). No secret is ever placed in this unit file.
+ExecStart=/opt/nadanada-service/.venv/bin/uvicorn server:app --host 127.0.0.1 --port 8089 --log-level info
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nadanada-service
+StateDirectory=nadanada-service
+
+[Install]
+WantedBy=multi-user.target

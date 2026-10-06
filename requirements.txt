@@ -1,0 +1,10 @@
+# nadanada-service runtime dependencies
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.6
+# BIP-340 schnorr verification + Nostr key math in tests
+coincurve>=19.0
+# Cashu mint client + HTTP
+httpx>=0.27
+# inbound-SMS reader against the Cloudflare-protected dashboard
+playwright>=1.44

@@ -1,0 +1,62 @@
+# nadanada-service — inbound SMS as a ContextVM service
+
+Service: nadanada-service
+Class:   cvm:service:phone-inbox
+Surface: ContextVM (MCP JSON-RPC over Nostr kind 25910; gift-wrapped)
+          + this HTTP contract at the advertised URL.
+
+Read inbound SMS on a rented nadanada number. Your nostr key is your identity;
+the operator reads free, everyone else pays per read in Cashu (CEP-8). The phone
+account's secret is held server-side and is never returned to a caller.
+
+## Address the service
+
+- Server npub: printed at publish time (see the CEP-6 announcement). The `docs`
+  tool and the `r` tag carry this contract's URL.
+- Relays: wss://relay.contextvm.org wss://relay2.contextvm.org wss://relay.primal.net
+- Traffic: kind 25910, NIP-17/NIP-59 gift-wrapped; discovery: kind 11316/11317.
+
+## Tools
+
+### phone.numbers.list  (free, read-only)
+List the numbers on the account.
+  args: {}
+  returns: {source, as_of, numbers:[{number,total_messages,expires}], notes}
+  `source` is always "dashboard-scrape": the number is read from the private
+  dashboard, not a rail API. `as_of` is the read time.
+
+### phone.messages.list  (PAID; owner free)
+Read inbound messages.
+  args: {phone_number?, limit?, cashu_token?, settlement_receipt?}
+  returns (success): a NIP-44 v2 payload addressed to YOUR npub:
+      {enc:"nip44-v2", to:"<your npub hex>", ciphertext:"<base64>", issued_at}
+    decrypt with your nostr key; the plaintext is
+      {source, as_of, phone_number, count,
+       messages:[{id, from, body, received_at, read}], notes, owner_free}
+  returns (unpaid): an isError result
+      {reason:"payment_required", cap:"cap:tool:phone.messages.list:<n>:sats",
+       price_sats:<n>, pmi:"bitcoin-cashu", gating:"explicit_gating"}
+
+Payment: attach a Cashu token (testnut by default) that covers the cap. The
+service swaps it at the mint before reading. The operator's npub is exempt.
+
+## Honest caveats
+
+- No delivery receipts, no send capability: this service only READS messages.
+- The reader drives a browser against the operator's dashboard; if the page
+  changes or Cloudflare re-challenges, the read fails loudly (with a captured
+  screenshot in evidence/) — it never fabricates a message.
+- `phone_number` is required only when the account has more than one number.
+
+## Errors
+
+Every refusal is a visible MCP `isError` result with `reason` + `hint`. Reasons:
+payment_required, insufficient_funds, token_already_spent, token_wrong_mint,
+token_state_unknown, mint_error, encrypt_failed, no_caller, no_server_key,
+unsupported method, not_found.
+
+## Docs
+
+- docs (alias llms): this document
+- llms-full: the manual
+- MCP resources: nadanada://llms.txt, nadanada://llms-full.txt

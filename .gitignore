@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.cvm-server.nsec
+.cvm-client.nsec
+*.db
+.env
+chromium-profile/
+
+# live evidence may contain dashboard URLs / message content — do not commit
+evidence/discovery/
+evidence/nadanada-live-*.json
+evidence/*.png
