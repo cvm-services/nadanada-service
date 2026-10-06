@@ -201,6 +201,47 @@ def parse_snapshot(raw: dict) -> DashboardSnapshot:
     return snap
 
 
+def wait_for_challenge_clear(page, timeout_ms: int) -> bool:
+    """Wait until the Cloudflare interstitial is gone (or time out). Best-effort."""
+    import time
+    deadline = time.time() + timeout_ms / 1000.0
+    while time.time() < deadline:
+        try:
+            text = (page.inner_text("body") or "").lower()
+        except Exception:                                          # noqa: BLE001
+            text = ""
+        if "security verification" not in text and "just a moment" not in text:
+            return True
+        try:
+            page.wait_for_timeout(1000)
+        except Exception:                                          # noqa: BLE001
+            break
+    return False
+
+
+#: reduce the headless-automation fingerprint so the CF interstitial can clear.
+_STEALTH_ARGS = [
+    "--no-sandbox",
+    "--disable-blink-features=AutomationControlled",
+    "--disable-dev-shm-usage",
+]
+_CHROME_UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36")
+_WEBDRIVER_JS = "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"
+
+
+def launch_options(config) -> dict:
+    opts = {
+        "headless": config.browser_headless,
+        "args": list(_STEALTH_ARGS),
+        "ignore_default_args": ["--enable-automation"],
+        "user_agent": _CHROME_UA,
+    }
+    if config.browser_channel and config.browser_channel != "chromium":
+        opts["channel"] = config.browser_channel
+    return opts
+
+
 class DashboardReader:
     """Read the dashboard through an injected fetcher (Playwright in prod)."""
 
@@ -243,11 +284,9 @@ class PlaywrightFetcher:
 
         captured: list[dict] = []
         with sync_playwright() as pw:
-            launch_kwargs = {"headless": self.config.browser_headless}
-            if self.config.browser_channel and self.config.browser_channel != "chromium":
-                launch_kwargs["channel"] = self.config.browser_channel
             context = pw.chromium.launch_persistent_context(
-                profile, args=["--no-sandbox"], **launch_kwargs)
+                profile, **launch_options(self.config))
+            context.add_init_script(_WEBDRIVER_JS)
             page = context.new_page()
             page.on("response", lambda r: _capture_json(r, captured))
             page.goto(self.config.dashboard_url, wait_until="domcontentloaded",
@@ -257,6 +296,7 @@ class PlaywrightFetcher:
                 page.wait_for_load_state("networkidle", timeout=self.config.page_timeout_ms)
             except Exception:                                  # noqa: BLE001
                 pass
+            wait_for_challenge_clear(page, self.config.page_timeout_ms)
             html = page.content()
             try:
                 text = page.inner_text("body")

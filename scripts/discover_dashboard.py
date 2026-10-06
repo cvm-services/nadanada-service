@@ -21,7 +21,8 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 from app.config import Config                                        # noqa: E402
-from app.nadanada_dashboard import parse_snapshot                    # noqa: E402
+from app.nadanada_dashboard import (parse_snapshot, wait_for_challenge_clear,
+                                    launch_options, _WEBDRIVER_JS)                    # noqa: E402
 
 
 def main() -> int:
@@ -39,11 +40,8 @@ def main() -> int:
 
     captured: list[dict] = []
     with sync_playwright() as pw:
-        kwargs = {"headless": cfg.browser_headless}
-        if cfg.browser_channel and cfg.browser_channel != "chromium":
-            kwargs["channel"] = cfg.browser_channel
-        ctx = pw.chromium.launch_persistent_context(
-            profile, args=["--no-sandbox"], **kwargs)
+        ctx = pw.chromium.launch_persistent_context(profile, **launch_options(cfg))
+        ctx.add_init_script(_WEBDRIVER_JS)
         page = ctx.new_page()
 
         def on_response(r):
@@ -64,6 +62,7 @@ def main() -> int:
             page.wait_for_load_state("networkidle", timeout=cfg.page_timeout_ms)
         except Exception:                                            # noqa: BLE001
             pass
+        print("challenge cleared:", wait_for_challenge_clear(page, cfg.page_timeout_ms))
         html = page.content()
         try:
             text = page.inner_text("body")
