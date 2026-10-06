@@ -49,7 +49,7 @@ Repo: https://github.com/cvm-services/nadanada-service (private)
 - [ ] Apply on vps2 (venv, `playwright install chromium`, OpenBao `/etc/nadanada.env`, units, Caddy)
 
 ## 8. Companion (separate, existing account only)
-- [ ] `hermes auth add openai-codex --type oauth` → approve device code
+- [~] `hermes auth add openai-codex --type oauth` started (device code issued); awaiting operator approval
 - [ ] `hermes auth list/status` clean
 - [ ] Run `codex/models` + `wham/usage` probes per the lane spec
 
