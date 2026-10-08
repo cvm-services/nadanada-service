@@ -7,7 +7,7 @@ payload addressed to the caller.
 
 - Class: `cvm:service:phone-inbox`
 - Tools: `phone.numbers.list` (free) · `phone.messages.list` (paid)
-- Contract: `docs/cvm/llms.txt` (served at **https://nadanada.orangesync.tech/cvm/llms.txt**)
+- Contract: `docs/cvm/llms.txt` (**not deployed** — in-repo only; no public URL, no service unit as of 2026-10-08)
 
 See `PLAN.md` for the design and `CHECKLIST.md` for status.
 
